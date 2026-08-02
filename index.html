@@ -938,9 +938,6 @@ footer .f-copy{color:#94A0B8;font-size:13px;}
         method="POST"
         action="https://formspree.io/f/meeybdao">
 
-  <!-- Redirect after successful submit -->
-  <input type="hidden" name="_next" value="thank-you.html">
-
   <!-- Spam Protection (Formspree built-in honeypot) -->
   <p hidden>
     <label>
@@ -1021,6 +1018,41 @@ footer .f-copy{color:#94A0B8;font-size:13px;}
 <button id="topBtn" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
 
 <script>
+
+/* Contact form: submit via fetch so we can redirect to our own thank-you page */
+const contactForm = document.getElementById("contactForm");
+if (contactForm) {
+  contactForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const formData = new FormData(contactForm);
+    const submitBtn = contactForm.querySelector("button[type=submit]");
+    const originalBtnHTML = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+    fetch(contactForm.action, {
+      method: "POST",
+      body: formData,
+      headers: { "Accept": "application/json" }
+    })
+    .then(response => {
+      if (response.ok) {
+        window.location.href = "thank-you.html";
+      } else {
+        response.json().then(data => {
+          alert(data.errors ? data.errors.map(err => err.message).join(", ") : "Oops! There was a problem submitting your form.");
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHTML;
+        });
+      }
+    })
+    .catch(() => {
+      alert("Oops! There was a problem submitting your form. Please try again.");
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnHTML;
+    });
+  });
+}
 
 /* Theme toggle (in-memory, no persistence needed across reloads) */
 const themeBtn = document.getElementById("themeBtn");
